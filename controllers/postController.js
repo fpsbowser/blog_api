@@ -18,7 +18,7 @@ exports.posts_list = function (req, res, next) {
 exports.post_detail = function (req, res, next) {
   // Fetch specific post
   // Return JSON
-  Post.findById(req.params.id).exec(function (err, results) {
+  Post.findById(req.params.postid).exec(function (err, results) {
     if (err) {
       return next(err);
     }
@@ -32,10 +32,10 @@ exports.post_delete = (req, res, next) => {
   async.parallel(
     {
       post(callback) {
-        Post.findById(req.params.id).exec(callback);
+        Post.findById(req.params.postid).exec(callback);
       },
       post_comments(callback) {
-        Comment.find({ post: req.params.id }).exec(callback);
+        Comment.find({ post: req.params.postid }).exec(callback);
       },
     },
     (err, results) => {
@@ -59,7 +59,7 @@ exports.post_delete = (req, res, next) => {
         return;
       }
       // Post has no comments. Delete object and send JSON response
-      Post.findByIdAndRemove(req.params.id, (err, post) => {
+      Post.findByIdAndRemove(req.params.postid, (err, post) => {
         if (err) {
           return next(err);
         }
@@ -101,7 +101,7 @@ exports.post_create = [
         if (err) {
           next(err);
         } else {
-          res.json({ success: 'true', post });
+          res.json({ status: 'success', post });
         }
       });
     }
@@ -117,11 +117,11 @@ exports.post_update = [
   async (req, res, next) => {
     // Extract the validation errors from a request.
     const errors = validationResult(req);
-    const originalPost = await Post.findById(req.params.id).exec();
+    const originalPost = await Post.findById(req.params.postid).exec();
     console.log(originalPost.title);
     // Create a post object with provided data and old id/data.
     const post = new Post({
-      _id: req.params.id, //This is required, or a new ID will be assigned!
+      _id: req.params.postid, //This is required, or a new ID will be assigned!
       title: req.body.title ? req.body.title : originalPost.title,
       message: req.body.message ? req.body.message : originalPost.message,
       timestamp: originalPost.timestamp,
@@ -135,7 +135,7 @@ exports.post_update = [
     } else {
       // Data is valid. Update the record.
       Post.findByIdAndUpdate(
-        req.params.id,
+        req.params.postid,
         post,
         { returnDocument: 'after' },
         (err, updatedpost) => {

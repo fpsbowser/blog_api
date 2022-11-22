@@ -7,7 +7,7 @@ const user_controller = require('../controllers/userController');
 
 /* GET API home page. */
 router.get('/', function (req, res, next) {
-  res.json({ message: 'api home' });
+  res.json({ message: 'blog_api home' });
 });
 
 // router.post('/', function (req, res, next) {
@@ -18,20 +18,26 @@ router.get('/posts', post_controller.posts_list);
 
 router.post('/posts', post_controller.post_create);
 
-router.get('/posts/:id', post_controller.post_detail);
+router.get('/posts/:postid', post_controller.post_detail);
 
-router.put('/posts/:id', post_controller.post_update);
+router.put('/posts/:postid', post_controller.post_update);
 
-router.delete('/posts/:id', post_controller.post_delete);
+router.delete('/posts/:postid', post_controller.post_delete);
 
 // COMMENTS
-router.get('/posts/:id/comments', comment_controller.comments_list);
+router.get('/posts/:postid/comments', comment_controller.comments_list);
 
-router.post('/posts/:id/comments/', comment_controller.comment_post);
+router.post('/posts/:postid/comments', comment_controller.comment_post);
 
-router.get('/posts/:id/comments/:commentid', comment_controller.comment_detail);
+router.get(
+  '/posts/:postid/comments/:commentid',
+  comment_controller.comment_detail
+);
 
-router.put('/posts/:id/comments/:commentid', comment_controller.comment_update);
+router.put(
+  '/posts/:postid/comments/:commentid',
+  comment_controller.comment_update
+);
 
 router.delete(
   '/posts/:id/comments/:commentid',

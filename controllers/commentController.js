@@ -5,11 +5,11 @@ const { body, validationResult } = require('express-validator');
 exports.comments_list = function (req, res, next) {
   // Fetch all comments
   // Return JSON
-  Comment.find({ post: req.params.id }).exec(function (err, list_comments) {
+  Comment.find({ post: req.params.postid }).exec(function (err, list_comments) {
     if (err) {
       res
         .json({
-          message: `Can't find post with id: ${req.params.id}`,
+          message: `Can't find post with id: ${req.params.postid}`,
           error: err,
         })
         .status(400);
@@ -22,11 +22,11 @@ exports.comments_list = function (req, res, next) {
 exports.comment_detail = function (req, res, next) {
   // Fetch specific comment
   // Return JSON
-  Post.findById(req.params.id, (err, post) => {
+  Post.findById(req.params.postid, (err, post) => {
     if (err) {
       res
         .json({
-          message: `Can't find post with id: ${req.params.id}`,
+          message: `Can't find post with id: ${req.params.postid}`,
           error: err,
         })
         .status(400);
@@ -52,11 +52,11 @@ exports.comment_post = [
   (req, res, next) => {
     const errors = validationResult(req);
 
-    Post.findById(req.params.id, (err, post) => {
+    Post.findById(req.params.postid, (err, post) => {
       if (err) {
         res
           .json({
-            message: `Can't find post with id: ${req.params.id}`,
+            message: `Can't find post with id: ${req.params.postid}`,
             error: err,
           })
           .status(400);
@@ -69,7 +69,7 @@ exports.comment_post = [
           name: req.body.name,
           comment: req.body.comment,
           timestamp: new Date(),
-          post: req.params.id,
+          post: req.params.postid,
         });
 
         comment.save((err) => {
@@ -108,11 +108,11 @@ exports.comment_update = [
     const originalComment = await Comment.findById(req.params.commentid).exec();
     console.log(originalComment.name);
 
-    Post.findById(req.params.id, (err, post) => {
+    Post.findById(req.params.postid, (err, post) => {
       if (err) {
         res
           .json({
-            message: `Can't find post with id: ${req.params.id}`,
+            message: `Can't find post with id: ${req.params.postid}`,
             error: err,
           })
           .status(400);
