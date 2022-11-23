@@ -1,5 +1,6 @@
 const Comment = require('../models/comment');
 const Post = require('../models/post');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 
 exports.comments_list = function (req, res, next) {
@@ -16,6 +17,39 @@ exports.comments_list = function (req, res, next) {
       return next(err);
     }
     res.json(list_comments);
+  });
+};
+
+exports.comments_list_delete = function (req, res, next) {
+  // Check Authorization
+  jwt.verify(req.token, process.env.API_SECRET, (err) => {
+    if (err) {
+      res
+        .json({
+          message:
+            "You don't have Authorization for this operation, please try relogging into an account with authorization",
+          status: 403,
+        })
+        .status(403);
+    } else {
+      // Fetch all comments
+      // Return JSON
+      Comment.deleteMany({ post: req.params.postid }).exec(function (
+        err,
+        list_comments
+      ) {
+        if (err) {
+          res
+            .json({
+              message: `Can't find post with id: ${req.params.postid}`,
+              error: err,
+            })
+            .status(400);
+          return next(err);
+        }
+        res.json({ deletedCount: list_comments.deletedCount });
+      });
+    }
   });
 };
 
@@ -86,14 +120,28 @@ exports.comment_post = [
 
 // Fetch specific comment
 exports.comment_delete = (req, res, next) => {
-  Comment.findByIdAndRemove(req.params.commentid, (err, comment) => {
+  jwt.verify(req.token, process.env.API_SECRET, (err) => {
     if (err) {
-      return next(err);
+      res
+        .json({
+          message:
+            "You don't have Authorization for this operation, please login to an account with authorization",
+          status: 403,
+        })
+        .status(403);
+    } else {
+      Comment.findByIdAndRemove(req.params.commentid, (err, comment) => {
+        if (err) {
+          return next(err);
+        }
+        console.log(
+          `Successfully removed comment with id: ${req.params.commentid}`
+        );
+        res
+          .json({ status: 'Successfully removed comment', comment })
+          .status(200);
+      });
     }
-    console.log(
-      `Successfully removed comment with id: ${req.params.commentid}`
-    );
-    res.json({ status: 'Successfully removed comment', comment }).status(200);
   });
 };
 
@@ -103,51 +151,65 @@ exports.comment_update = [
   body('comment', 'New comment must be a string.').optional().isString(),
   // Process request after validation and sanitization.
   async (req, res, next) => {
-    // Extract the validation errors from a request.
-    const errors = validationResult(req);
     const originalComment = await Comment.findById(req.params.commentid).exec();
-    console.log(originalComment.name);
-
-    Post.findById(req.params.postid, (err, post) => {
+    jwt.verify(req.token, process.env.API_SECRET, (err) => {
       if (err) {
         res
           .json({
-            message: `Can't find post with id: ${req.params.postid}`,
-            error: err,
+            message:
+              "You don't have Authorization for this operation, please login to an account with authorization",
+            status: 403,
           })
-          .status(400);
-        return next(err);
-      }
-
-      // Create a commemt object with provided data and old id/data.
-      const comment = new Comment({
-        _id: req.params.commentid, //This is required, or a new ID will be assigned!
-        name: req.body.name ? req.body.name : originalComment.name,
-        comment: req.body.comment ? req.body.comment : originalComment.comment,
-        timestamp: originalComment.timestamp,
-        edited_timestamp: new Date(),
-      });
-      if (!errors.isEmpty()) {
-        // There are errors.
-        res.json(errors).status(400);
+          .status(403);
       } else {
-        // Data is valid. Update the record.
-        Comment.findByIdAndUpdate(
-          req.params.commentid,
-          comment,
-          { returnDocument: 'after' },
-          (err, updatedcomment) => {
-            if (err) {
-              return next(err);
-            }
-            // Successful: redirect to type detail page.
-            res.json({
-              status: 'Success',
-              old: originalComment,
-              updatedcomment,
-            });
+        // Extract the validation errors from a request.
+        const errors = validationResult(req);
+        console.log(originalComment.name);
+
+        Post.findById(req.params.postid, (err, post) => {
+          if (err) {
+            res
+              .json({
+                message: `Can't find post with id: ${req.params.postid}`,
+                error: err,
+              })
+              .status(400);
+            return next(err);
           }
-        );
+
+          // Create a commemt object with provided data and old id/data.
+          const comment = new Comment({
+            _id: req.params.commentid, //This is required, or a new ID will be assigned!
+            name: req.body.name ? req.body.name : originalComment.name,
+            comment: req.body.comment
+              ? req.body.comment
+              : originalComment.comment,
+            timestamp: originalComment.timestamp,
+            edited_timestamp: new Date(),
+          });
+          if (!errors.isEmpty()) {
+            // There are errors.
+            res.json(errors).status(400);
+          } else {
+            // Data is valid. Update the record.
+            Comment.findByIdAndUpdate(
+              req.params.commentid,
+              comment,
+              { returnDocument: 'after' },
+              (err, updatedcomment) => {
+                if (err) {
+                  return next(err);
+                }
+                // Successful: redirect to type detail page.
+                res.json({
+                  status: 'Success',
+                  old: originalComment,
+                  updatedcomment,
+                });
+              }
+            );
+          }
+        });
       }
     });
   },
