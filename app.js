@@ -5,6 +5,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 //Connect to mongoDB
 mongoose.connect(process.env.MONGO_URL, {
@@ -32,6 +33,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors());
 
 app.use('/', indexRouter);
 app.use('/api', apiRouter);
