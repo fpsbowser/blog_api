@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fetch API Test</title>
+  </head>
+  <body>
+    <h1>API FETCH TESTING</h1>
+    <div id="post-container"></div>
+    <script>
+      const postContainer = document.getElementById('post-container');
+
+      function fetchCommentsForPost(post) {
+        const URI = `http://localhost:3000/api/posts/${post}/comments`;
+        fetch(URI, { mode: 'cors' })
+          .then((res) => {
+            return res.json();
+          })
+          .then((res) => {
+            console.log('Comments', res);
+          });
+      }
+
+      fetch('http://localhost:3000/api/posts', { mode: 'cors' })
+        .then((response) => {
+          return response.json();
+        })
+        .then((response) => {
+          console.log(response);
+          for (let i = 0; i < response.length; i++) {
+            const obj = response[i];
+            const card = document.createElement('div');
+            // card.className = 'card';
+            card.style =
+              'border: 2px solid black; border-radius: 12px; padding: 1rem; margin: .5rem; background-color: blanchedalmond; text-align: center;';
+
+            const title = document.createElement('h1');
+            title.textContent = obj.title;
+            card.appendChild(title);
+
+            const message = document.createElement('p');
+            message.textContent = obj.message;
+            card.appendChild(message);
+
+            const date = document.createElement('h3');
+            date.textContent = obj.timestamp;
+            card.appendChild(date);
+
+            card.addEventListener('click', (e) => {
+              fetchCommentsForPost(obj._id);
+              //   location.href = `http://localhost:3000/api/posts/${obj._id}`;
+            });
+
+            postContainer.appendChild(card);
+          }
+        });
+    </script>
+  </body>
+</html>
